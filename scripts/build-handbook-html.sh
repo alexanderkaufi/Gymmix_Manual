@@ -484,7 +484,7 @@ tmp_de_onepage="$(mktemp)"
   echo "## Screenshots"
   echo
   echo "Alle Screenshots an einem Ort:"
-  echo "- [Zur Screenshot-Galerie](/de/handbuch/screenshots.html)"
+  echo "- [Zur Screenshot-Galerie](./screenshots.html)"
 } > "$tmp_de_onepage"
 perl "$RENDERER" "$tmp_de_onepage" "$OUT_DIR/de/handbuch/gymmixHandbuch.html" "de"
 rm -f "$tmp_de_onepage"
@@ -524,12 +524,13 @@ tmp_en_onepage="$(mktemp)"
   echo "## Screenshots"
   echo
   echo "All screenshots in one place:"
-  echo "- [Open screenshot gallery](/en/manual/screenshots.html)"
+  echo "- [Open screenshot gallery](./screenshots.html)"
 } > "$tmp_en_onepage"
 perl "$RENDERER" "$tmp_en_onepage" "$OUT_DIR/en/manual/gymmixManual.html" "en"
 perl "$RENDERER" "$DOCS_DIR/en/manual/index.md" "$OUT_DIR/handbuch/index.html" "en" "../" "../en/manual/screenshots.html" "./index.html" "../en/manual/"
 perl "$RENDERER" "$tmp_en_onepage" "$OUT_DIR/handbuch/gymmixManual.html" "en" "../" "../en/manual/screenshots.html" "./index.html"
 perl -pi -e 's#\.\./\.\./assets/images/figures/#../assets/images/figures/#g' "$OUT_DIR/handbuch/gymmixManual.html"
+perl -pi -e 's#href="\./screenshots\.html"#href="../en/manual/screenshots.html"#g' "$OUT_DIR/handbuch/gymmixManual.html"
 cp "$OUT_DIR/handbuch/gymmixManual.html" "$OUT_DIR/handbuch/gymmixHandbuch.html"
 rm -f "$tmp_en_onepage"
 
@@ -566,5 +567,25 @@ tmp_en_gallery="$(mktemp)"
 } > "$tmp_en_gallery"
 perl "$RENDERER" "$tmp_en_gallery" "$OUT_DIR/en/manual/screenshots.html" "en"
 rm -f "$tmp_en_gallery"
+
+cat > "$OUT_DIR/index.html" <<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gymmix Manual</title>
+  <meta http-equiv="refresh" content="0; url=./handbuch/" />
+  <link rel="stylesheet" href="./assets/handbook.css" />
+</head>
+<body>
+  <main class="redirect-card">
+    <h1>Gymmix Manual</h1>
+    <p>If you are not redirected automatically, open the manual here:</p>
+    <p><a href="./handbuch/">Open Handbook</a></p>
+  </main>
+</body>
+</html>
+HTML
 
 echo "Built handbook HTML in: $OUT_DIR"
