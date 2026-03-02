@@ -1,0 +1,5 @@
+.DS_Store
+*.pages
+*.rtfd/
+site/assets/images/raw/
+site/assets/images/screenshots/

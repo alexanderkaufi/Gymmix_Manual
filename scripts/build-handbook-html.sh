@@ -1,0 +1,570 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DOCS_DIR="$ROOT_DIR/docs"
+OUT_DIR="$ROOT_DIR/site"
+RENDERER="$ROOT_DIR/scripts/render-handbook-md.pl"
+
+LOCALE_DOC_DIRS=(
+  "de:handbuch"
+  "en:manual"
+  "ar:manual"
+  "zh-hans:manual"
+  "zh-hant:manual"
+  "vi:manual"
+  "es:manual"
+  "fr:manual"
+  "fr-ca:manual"
+  "hi:manual"
+  "pt-pt:manual"
+  "pt-br:manual"
+  "cs:manual"
+  "th:manual"
+  "id:manual"
+  "fil:manual"
+  "he:manual"
+  "nb:manual"
+  "tr:manual"
+  "ja:manual"
+  "ko:manual"
+  "ky:manual"
+  "kk:manual"
+  "ru:manual"
+  "it:manual"
+  "lt:manual"
+  "et:manual"
+  "lv:manual"
+  "ms:manual"
+  "sv:manual"
+  "nl:manual"
+  "da:manual"
+  "fi:manual"
+  "el:manual"
+  "hr:manual"
+  "ro:manual"
+  "sk:manual"
+  "hu:manual"
+  "uk:manual"
+  "pl:manual"
+)
+
+mkdir -p "$OUT_DIR/assets/images/figures"
+for locale_doc_dir in "${LOCALE_DOC_DIRS[@]}"; do
+  locale="${locale_doc_dir%%:*}"
+  doc_dir="${locale_doc_dir##*:}"
+  mkdir -p "$OUT_DIR/$locale/$doc_dir"
+done
+mkdir -p "$OUT_DIR/handbuch"
+rm -rf "$OUT_DIR/assets/images/raw"
+rm -rf "$OUT_DIR/assets/images/screenshots"
+
+cat > "$OUT_DIR/assets/handbook.css" <<'CSS'
+:root {
+  --bg: #f3f1ec;
+  --surface: #ffffff;
+  --text: #1c2228;
+  --muted: #5b6773;
+  --line: #d9dee5;
+  --brand: #146c63;
+  --brand-soft: #e8f4f1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 420px at 20% -5%, #ffffff 0%, transparent 55%),
+    radial-gradient(1200px 480px at 85% -10%, #ece8df 0%, transparent 58%),
+    var(--bg);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  line-height: 1.72;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.topbar-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  color: var(--brand);
+}
+
+.topnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.topnav a:hover {
+  border-color: #bfd4d0;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.topnav .lang-switcher {
+  position: relative;
+}
+
+.topnav .lang-switcher > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.topnav .lang-switcher > summary::after {
+  content: "▾";
+  margin-left: 8px;
+  font-size: 11px;
+  color: #60717f;
+}
+
+.topnav .lang-switcher > summary::-webkit-details-marker {
+  display: none;
+}
+
+.topnav .lang-switcher[open] > summary {
+  border-color: #bfd4d0;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.topnav .lang-switcher > ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  min-width: 160px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(19, 34, 48, 0.12);
+}
+
+.topnav .lang-switcher li {
+  margin: 0;
+}
+
+.topnav .lang-switcher a,
+.topnav .lang-switcher span {
+  display: block;
+  border-radius: 8px;
+  padding: 9px 11px;
+  text-decoration: none;
+}
+
+.topnav .lang-switcher a {
+  color: var(--text);
+}
+
+.topnav .lang-switcher a:hover {
+  background: #f3f7f9;
+  color: var(--brand);
+}
+
+.topnav .lang-switcher li.active span {
+  background: #eef4f7;
+  color: #2f4354;
+}
+
+.container {
+  max-width: 860px;
+  margin: 20px auto 64px;
+  padding: 28px 24px 56px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(21, 33, 46, 0.05);
+}
+
+[id] {
+  scroll-margin-top: 72px;
+}
+
+h1 {
+  font-size: 2.02rem;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin-top: 2.1rem;
+  margin-bottom: 0.65rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid #edf0f4;
+  font-size: 1.38rem;
+  line-height: 1.28;
+}
+
+h3 {
+  margin-top: 1.45rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.09rem;
+  line-height: 1.34;
+}
+
+p, li {
+  color: var(--text);
+}
+
+p {
+  margin: 0.55rem 0 0.88rem;
+}
+
+ul, ol {
+  margin: 0.4rem 0 1.12rem 1.3rem;
+  padding: 0;
+}
+
+li {
+  margin: 0.16rem 0;
+}
+
+code {
+  font-family: "IBM Plex Mono", Menlo, Consolas, monospace;
+  background: #f3f7f9;
+  border: 1px solid #dde6ec;
+  border-radius: 4px;
+  padding: 0.07rem 0.3rem;
+  font-size: 0.92em;
+}
+
+a {
+  color: #0f6a61;
+  text-decoration-thickness: 1.2px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: #0b554e;
+}
+
+#inhaltsverzeichnis + ul {
+  list-style: none;
+  margin: 0 0 1.2rem;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+#inhaltsverzeichnis + ul li {
+  margin: 0;
+}
+
+#inhaltsverzeichnis + ul a {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcfd;
+  padding: 9px 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+#inhaltsverzeichnis + ul a:hover {
+  border-color: #bfd4d0;
+  background: var(--brand-soft);
+  color: #0b554e;
+}
+
+img {
+  display: block;
+  width: min(100%, 460px);
+  max-width: 100%;
+  height: auto;
+  margin: 12px auto 24px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 18px rgba(26, 38, 52, 0.08);
+}
+
+.redirect-card {
+  max-width: 760px;
+  margin: 24px auto 56px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 26px 24px;
+  box-shadow: 0 10px 26px rgba(21, 33, 46, 0.05);
+}
+
+.redirect-card h1 {
+  margin-bottom: 0.65rem;
+}
+
+@media (max-width: 680px) {
+  body {
+    font-size: 16px;
+    line-height: 1.68;
+  }
+
+  .topbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 10px 12px;
+  }
+
+  .topnav {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .topnav .lang-switcher {
+    width: 100%;
+  }
+
+  .topnav .lang-switcher > summary {
+    width: 100%;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 15px;
+  }
+
+  .topnav .lang-switcher > ul {
+    position: static;
+    margin-top: 8px;
+    min-width: 0;
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .topnav .lang-switcher a,
+  .topnav .lang-switcher span {
+    padding: 10px 11px;
+    font-size: 15px;
+  }
+
+  .container {
+    margin: 10px 10px 40px;
+    padding: 20px 14px 34px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.24rem;
+  }
+
+  #inhaltsverzeichnis + ul {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #inhaltsverzeichnis + ul a {
+    padding: 12px 12px;
+  }
+
+  img {
+    width: min(100%, 380px);
+    margin: 10px auto 18px;
+  }
+
+  .redirect-card {
+    margin: 12px 10px 30px;
+    padding: 18px 14px;
+    border-radius: 12px;
+  }
+}
+CSS
+
+if compgen -G "$DOCS_DIR/shared/images/figures/*.png" > /dev/null; then
+  rm -f "$OUT_DIR/assets/images/figures/"*.png
+  cp "$DOCS_DIR/shared/images/figures/"*.png "$OUT_DIR/assets/images/figures/"
+fi
+
+for locale_doc_dir in "${LOCALE_DOC_DIRS[@]}"; do
+  locale="${locale_doc_dir%%:*}"
+  doc_dir="${locale_doc_dir##*:}"
+  if ! compgen -G "$DOCS_DIR/$locale/$doc_dir/*.md" > /dev/null; then
+    continue
+  fi
+
+  for md_file in "$DOCS_DIR/$locale/$doc_dir/"*.md; do
+    base_name="$(basename "$md_file" .md)"
+    perl "$RENDERER" "$md_file" "$OUT_DIR/$locale/$doc_dir/$base_name.html" "$locale"
+  done
+done
+
+tmp_de_onepage="$(mktemp)"
+{
+  echo "# Gymmix Handbuch"
+  echo
+  echo "Stand: 1. März 2026"
+  echo
+  echo "## Inhaltsverzeichnis"
+  echo
+  echo "- [Start](#start)"
+  echo "- [Einstellungen und Abo](#einstellungen-und-abo)"
+  echo "- [Daten und Statistik](#daten-und-statistik)"
+  echo "- [Training](#training)"
+  echo "- [Übungen und Timer](#uebungen-und-timer)"
+  echo "- [FAQ](#faq)"
+  echo "- [Screenshots](#screenshots)"
+  echo
+  for section in \
+    "$DOCS_DIR/de/handbuch/start.md" \
+    "$DOCS_DIR/de/handbuch/einstellungen-und-abo.md" \
+    "$DOCS_DIR/de/handbuch/daten-und-statistik.md" \
+    "$DOCS_DIR/de/handbuch/training.md" \
+    "$DOCS_DIR/de/handbuch/uebungen-und-timer.md" \
+    "$DOCS_DIR/de/handbuch/faq.md"; do
+    echo
+    perl -pe '
+      if (!$done && s/^# /## /) { $done = 1; next; }
+      s/^## /### /;
+      s/^Zurueck zur Uebersicht:.*$//;
+      s/^Zurück zur Übersicht:.*$//;
+    ' "$section"
+  done
+
+  echo
+  echo "## Screenshots"
+  echo
+  echo "Alle Screenshots an einem Ort:"
+  echo "- [Zur Screenshot-Galerie](/de/handbuch/screenshots.html)"
+} > "$tmp_de_onepage"
+perl "$RENDERER" "$tmp_de_onepage" "$OUT_DIR/de/handbuch/gymmixHandbuch.html" "de"
+rm -f "$tmp_de_onepage"
+
+tmp_en_onepage="$(mktemp)"
+{
+  echo "# Gymmix Manual"
+  echo
+  echo "Last updated: March 1, 2026"
+  echo
+  echo "## Contents"
+  echo
+  echo "- [Start](#start)"
+  echo "- [Settings and Subscription](#settings-and-subscription)"
+  echo "- [Data and Statistics](#data-and-statistics)"
+  echo "- [Training](#training)"
+  echo "- [Exercises and Timer](#exercises-and-timer)"
+  echo "- [FAQ](#faq)"
+  echo "- [Screenshots](#screenshots)"
+  echo
+  for section in \
+    "$DOCS_DIR/en/manual/start.md" \
+    "$DOCS_DIR/en/manual/settings-and-subscription.md" \
+    "$DOCS_DIR/en/manual/data-and-statistics.md" \
+    "$DOCS_DIR/en/manual/training.md" \
+    "$DOCS_DIR/en/manual/exercises-and-timer.md" \
+    "$DOCS_DIR/en/manual/faq.md"; do
+    echo
+    perl -pe '
+      if (!$done && s/^# /## /) { $done = 1; next; }
+      s/^## /### /;
+      s/^Back to overview:.*$//;
+    ' "$section"
+  done
+
+  echo
+  echo "## Screenshots"
+  echo
+  echo "All screenshots in one place:"
+  echo "- [Open screenshot gallery](/en/manual/screenshots.html)"
+} > "$tmp_en_onepage"
+perl "$RENDERER" "$tmp_en_onepage" "$OUT_DIR/en/manual/gymmixManual.html" "en"
+perl "$RENDERER" "$DOCS_DIR/en/manual/index.md" "$OUT_DIR/handbuch/index.html" "en" "../" "../en/manual/screenshots.html" "./index.html" "../en/manual/"
+perl "$RENDERER" "$tmp_en_onepage" "$OUT_DIR/handbuch/gymmixManual.html" "en" "../" "../en/manual/screenshots.html" "./index.html"
+perl -pi -e 's#\.\./\.\./assets/images/figures/#../assets/images/figures/#g' "$OUT_DIR/handbuch/gymmixManual.html"
+cp "$OUT_DIR/handbuch/gymmixManual.html" "$OUT_DIR/handbuch/gymmixHandbuch.html"
+rm -f "$tmp_en_onepage"
+
+tmp_de_gallery="$(mktemp)"
+{
+  echo "# Screenshots"
+  echo
+  echo "Diese Seite zeigt die aus der RTFD importierten Screenshots."
+  echo
+  for img in "$OUT_DIR/assets/images/figures/"*.png; do
+    name="$(basename "$img")"
+    echo "## $name"
+    echo "![${name}](../../assets/images/figures/${name})"
+    echo
+  done
+  echo "Zurück zur Übersicht: [Gymmix Handbuch](./index.md)"
+} > "$tmp_de_gallery"
+perl "$RENDERER" "$tmp_de_gallery" "$OUT_DIR/de/handbuch/screenshots.html" "de"
+rm -f "$tmp_de_gallery"
+
+tmp_en_gallery="$(mktemp)"
+{
+  echo "# Screenshots"
+  echo
+  echo "This page shows screenshots imported from the original RTFD package."
+  echo
+  for img in "$OUT_DIR/assets/images/figures/"*.png; do
+    name="$(basename "$img")"
+    echo "## $name"
+    echo "![${name}](../../assets/images/figures/${name})"
+    echo
+  done
+  echo "Back to overview: [Gymmix Manual](./index.md)"
+} > "$tmp_en_gallery"
+perl "$RENDERER" "$tmp_en_gallery" "$OUT_DIR/en/manual/screenshots.html" "en"
+rm -f "$tmp_en_gallery"
+
+echo "Built handbook HTML in: $OUT_DIR"
