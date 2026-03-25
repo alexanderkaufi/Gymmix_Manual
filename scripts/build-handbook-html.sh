@@ -80,6 +80,9 @@ html {
 }
 
 body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   margin: 0;
   background:
     radial-gradient(1100px 420px at 20% -5%, #ffffff 0%, transparent 55%),
@@ -224,8 +227,9 @@ body {
 }
 
 .container {
+  width: min(calc(100% - 24px), 860px);
   max-width: 860px;
-  margin: 20px auto 64px;
+  margin: 20px auto 12px;
   padding: 28px 24px 56px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -338,8 +342,9 @@ img {
 }
 
 .redirect-card {
+  width: min(calc(100% - 24px), 760px);
   max-width: 760px;
-  margin: 24px auto 56px;
+  margin: 24px auto 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -352,12 +357,14 @@ img {
 }
 
 .legal-footer {
-  max-width: 860px;
-  margin: -38px auto 18px;
+  width: 100%;
+  margin-top: auto;
   padding: 0 12px 12px;
 }
 
 .legal-links {
+  max-width: 860px;
+  margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
@@ -421,7 +428,8 @@ img {
   }
 
   .container {
-    margin: 10px 10px 40px;
+    width: min(calc(100% - 20px), 860px);
+    margin: 10px auto 10px;
     padding: 20px 14px 34px;
     border-radius: 12px;
   }
@@ -449,13 +457,13 @@ img {
   }
 
   .redirect-card {
-    margin: 12px 10px 30px;
+    width: min(calc(100% - 20px), 760px);
+    margin: 12px auto 10px;
     padding: 18px 14px;
     border-radius: 12px;
   }
 
   .legal-footer {
-    margin: -14px auto 14px;
     padding: 0 10px 10px;
   }
 
