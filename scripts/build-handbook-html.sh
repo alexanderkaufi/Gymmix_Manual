@@ -353,15 +353,16 @@ img {
 
 .legal-footer {
   max-width: 860px;
-  margin: -38px auto 44px;
-  padding: 0 18px;
+  margin: -38px auto 18px;
+  padding: 0 12px 12px;
 }
 
 .legal-links {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  justify-content: flex-end;
+  justify-content: center;
+  text-align: center;
 }
 
 .legal-links a {
@@ -373,10 +374,6 @@ img {
 .legal-links a:hover {
   color: #0b4f87;
   text-decoration: underline;
-}
-
-.redirect-links {
-  margin-top: 1.2rem;
 }
 
 @media (max-width: 680px) {
@@ -458,12 +455,12 @@ img {
   }
 
   .legal-footer {
-    margin: -18px 0 26px;
-    padding: 0 12px;
+    margin: -14px auto 14px;
+    padding: 0 10px 10px;
   }
 
   .legal-links {
-    justify-content: flex-start;
+    justify-content: center;
   }
 }
 CSS
@@ -626,8 +623,13 @@ cat > "$OUT_DIR/index.html" <<'HTML'
     <h1>Gymmix Manual</h1>
     <p>If you are not redirected automatically, open the manual here:</p>
     <p><a href="./handbuch/">Open Handbook</a></p>
-    <p class="redirect-links"><a href="./legal/imprint.html">Imprint</a> · <a href="./legal/privacy.html">Privacy</a></p>
   </main>
+  <footer class="legal-footer">
+    <nav class="legal-links" aria-label="Legal">
+      <a href="./legal/imprint.html">Imprint</a>
+      <a href="./legal/privacy.html">Privacy</a>
+    </nav>
+  </footer>
 </body>
 </html>
 HTML
