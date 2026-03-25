@@ -288,6 +288,34 @@ img {
   margin-bottom: 0.65rem;
 }
 
+.legal-footer {
+  max-width: 860px;
+  margin: -38px auto 44px;
+  padding: 0 18px;
+}
+
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.legal-links a {
+  color: #0f67b0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  color: #0b4f87;
+  text-decoration: underline;
+}
+
+.redirect-links {
+  margin-top: 1.2rem;
+}
+
 @media (max-width: 680px) {
   body {
     font-size: 16px;
@@ -364,5 +392,14 @@ img {
     margin: 12px 10px 30px;
     padding: 18px 14px;
     border-radius: 12px;
+  }
+
+  .legal-footer {
+    margin: -18px 0 26px;
+    padding: 0 12px;
+  }
+
+  .legal-links {
+    justify-content: flex-start;
   }
 }

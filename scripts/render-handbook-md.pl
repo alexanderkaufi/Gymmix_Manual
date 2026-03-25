@@ -124,6 +124,14 @@ my $home_label = $lang_info->{home_label};
 my $css_href = $root_prefix . 'assets/handbook.css';
 
 my $current_lang_label = $lang_info->{label};
+my $imprint_label = $lang eq 'de' ? 'Impressum' : 'Imprint';
+my $privacy_label = $lang eq 'de' ? 'Datenschutz' : 'Privacy';
+my $imprint_href = $lang eq 'de'
+    ? $root_prefix . 'legal/impressum.html'
+    : $root_prefix . 'legal/imprint.html';
+my $privacy_href = $lang eq 'de'
+    ? $root_prefix . 'legal/datenschutz.html'
+    : $root_prefix . 'legal/privacy.html';
 
 my %html_lang_map = (
     'zh-hans' => 'zh-Hans',
@@ -151,6 +159,15 @@ my $language_menu = <<"HTML";
           <ul>
 $language_items          </ul>
         </details>
+HTML
+
+my $legal_footer = <<"HTML";
+  <footer class="legal-footer">
+    <nav class="legal-links" aria-label="Legal">
+      <a href="$imprint_href">$imprint_label</a>
+      <a href="$privacy_href">$privacy_label</a>
+    </nav>
+  </footer>
 HTML
 
 my $body = '';
@@ -302,6 +319,7 @@ $language_menu
   <main class="container">
 $body
   </main>
+$legal_footer
 </body>
 </html>
 HTML

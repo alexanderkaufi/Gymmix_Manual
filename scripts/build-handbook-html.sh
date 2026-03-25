@@ -55,6 +55,7 @@ for locale_doc_dir in "${LOCALE_DOC_DIRS[@]}"; do
   doc_dir="${locale_doc_dir##*:}"
   mkdir -p "$OUT_DIR/$locale/$doc_dir"
 done
+mkdir -p "$OUT_DIR/legal"
 mkdir -p "$OUT_DIR/handbuch"
 rm -rf "$OUT_DIR/assets/images/raw"
 rm -rf "$OUT_DIR/assets/images/screenshots"
@@ -350,6 +351,34 @@ img {
   margin-bottom: 0.65rem;
 }
 
+.legal-footer {
+  max-width: 860px;
+  margin: -38px auto 44px;
+  padding: 0 18px;
+}
+
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+.legal-links a {
+  color: #0f67b0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-links a:hover {
+  color: #0b4f87;
+  text-decoration: underline;
+}
+
+.redirect-links {
+  margin-top: 1.2rem;
+}
+
 @media (max-width: 680px) {
   body {
     font-size: 16px;
@@ -427,6 +456,15 @@ img {
     padding: 18px 14px;
     border-radius: 12px;
   }
+
+  .legal-footer {
+    margin: -18px 0 26px;
+    padding: 0 12px;
+  }
+
+  .legal-links {
+    justify-content: flex-start;
+  }
 }
 CSS
 
@@ -447,6 +485,11 @@ for locale_doc_dir in "${LOCALE_DOC_DIRS[@]}"; do
     perl "$RENDERER" "$md_file" "$OUT_DIR/$locale/$doc_dir/$base_name.html" "$locale"
   done
 done
+
+perl "$RENDERER" "$DOCS_DIR/legal/impressum.md" "$OUT_DIR/legal/impressum.html" "de" "../" "./datenschutz.html" "../de/handbuch/index.html"
+perl "$RENDERER" "$DOCS_DIR/legal/datenschutz.md" "$OUT_DIR/legal/datenschutz.html" "de" "../" "./impressum.html" "../de/handbuch/index.html"
+perl "$RENDERER" "$DOCS_DIR/legal/imprint.md" "$OUT_DIR/legal/imprint.html" "en" "../" "./privacy.html" "../handbuch/"
+perl "$RENDERER" "$DOCS_DIR/legal/privacy.md" "$OUT_DIR/legal/privacy.html" "en" "../" "./imprint.html" "../handbuch/"
 
 tmp_de_onepage="$(mktemp)"
 {
@@ -583,6 +626,7 @@ cat > "$OUT_DIR/index.html" <<'HTML'
     <h1>Gymmix Manual</h1>
     <p>If you are not redirected automatically, open the manual here:</p>
     <p><a href="./handbuch/">Open Handbook</a></p>
+    <p class="redirect-links"><a href="./legal/imprint.html">Imprint</a> · <a href="./legal/privacy.html">Privacy</a></p>
   </main>
 </body>
 </html>
